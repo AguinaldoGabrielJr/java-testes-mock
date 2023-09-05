@@ -17,14 +17,5 @@ public class Program {
 		List<Leilao> buscarTodos = mock.buscarTodos();
 		Assert.assertTrue(buscarTodos.isEmpty());
 	}
-	
-	@Test
-	void hello2() {
-		LeilaoDao mock = Mockito.mock(LeilaoDao.class);
-		List<Leilao> buscarTodos = mock.buscarTodos();
-		Assert.assertTrue(buscarTodos.isEmpty());
-	}
-	
-	
-	
+
 }
