@@ -23,49 +23,59 @@ class FinalizarLeilaoServiceTest {
 	@Mock
 	private LeilaoDao leilaoDao;
 
+	@Mock
+	EnviadorDeEmails enviadorDeEmails;
+
 	@BeforeEach
 	public void beforeEach() {
 		MockitoAnnotations.initMocks(this);
-		this.service = new FinalizarLeilaoService(leilaoDao);
+		this.service = new FinalizarLeilaoService(leilaoDao, enviadorDeEmails);
 	}
 
 	@Test
 	void deveriaFinalizarUmLeilao() {
 		List<Leilao> leiloes = leiloes();
-		
-		Mockito.when(leilaoDao.buscarLeiloesExpirados())
-		.thenReturn(leiloes);
-		
+
+		Mockito.when(leilaoDao.buscarLeiloesExpirados()).thenReturn(leiloes);
+
 		service.finalizarLeiloesExpirados();
-		
+
 		Leilao leilao = leiloes.get(0);
 		Assert.assertTrue(leilao.isFechado());
-		Assert.assertEquals(new BigDecimal("900"),
-				leilao.getLanceVencedor().getValor());
-		
+		Assert.assertEquals(new BigDecimal("900"), leilao.getLanceVencedor().getValor());
 		Mockito.verify(leilaoDao).salvar(leilao);
-		
-		
+
 	}
 
-    private List<Leilao> leiloes() {
-        List<Leilao> lista = new ArrayList<>();
+	@Test
+	void deveriaEnviarEmailParaVencedor() {
+		List<Leilao> leiloes = leiloes();
 
-        Leilao leilao = new Leilao("Celular",
-                        new BigDecimal("500"),
-                        new Usuario("Fulano"));
+		Mockito.when(leilaoDao.buscarLeiloesExpirados()).thenReturn(leiloes);
 
-        Lance primeiro = new Lance(new Usuario("Beltrano"),
-                        new BigDecimal("600"));
-        Lance segundo = new Lance(new Usuario("Ciclano"),
-                        new BigDecimal("900"));
+		service.finalizarLeiloesExpirados();
 
-        leilao.propoe(primeiro);
-        leilao.propoe(segundo);
+		Leilao leilao = leiloes.get(0);
+		Lance lanceVencedor = leilao.getLanceVencedor();
 
-        lista.add(leilao);
+		Mockito.verify(enviadorDeEmails).enviarEmailVencedorLeilao(lanceVencedor);
 
-        return lista;
+	}
 
-    }
+	private List<Leilao> leiloes() {
+		List<Leilao> lista = new ArrayList<>();
+
+		Leilao leilao = new Leilao("Celular", new BigDecimal("500"), new Usuario("Fulano"));
+
+		Lance primeiro = new Lance(new Usuario("Beltrano"), new BigDecimal("600"));
+		Lance segundo = new Lance(new Usuario("Ciclano"), new BigDecimal("900"));
+
+		leilao.propoe(primeiro);
+		leilao.propoe(segundo);
+
+		lista.add(leilao);
+
+		return lista;
+
+	}
 }
