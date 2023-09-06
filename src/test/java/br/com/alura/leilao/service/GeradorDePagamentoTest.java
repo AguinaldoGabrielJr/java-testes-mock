@@ -1,8 +1,13 @@
 package br.com.alura.leilao.service;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 
+import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -16,7 +21,6 @@ import br.com.alura.leilao.model.Lance;
 import br.com.alura.leilao.model.Leilao;
 import br.com.alura.leilao.model.Pagamento;
 import br.com.alura.leilao.model.Usuario;
-import org.junit.*;
 
 class GeradorDePagamentoTest {
 
@@ -25,19 +29,30 @@ class GeradorDePagamentoTest {
 	@Mock
 	private PagamentoDao pagamentoDao;
 	
+	@Mock
+	private Clock clock;
+	
 	@Captor
 	private ArgumentCaptor<Pagamento> captor;
 
 	@BeforeEach
 	public void beforeEach() {
 		MockitoAnnotations.initMocks(this);
-		this.gerador = new GeradorDePagamento(pagamentoDao);
+		this.gerador = new GeradorDePagamento(pagamentoDao, clock);
 	}
 	
 	@Test
 	void deveriaCriarPagamentoparaVencedorDoLeilao() {
 		Leilao leilao = leilao();
 		Lance vencedor = leilao.getLanceVencedor();
+		
+		LocalDate data = LocalDate.of(2023, 9, 6);
+		
+		Instant instant = data.atStartOfDay(ZoneId.systemDefault()).toInstant();
+		
+		Mockito.when(clock.instant()).thenReturn(instant);
+		Mockito.when(clock.getZone()).thenReturn(ZoneId.systemDefault());
+		
 		gerador.gerarPagamento(vencedor);
 		
 		Mockito.verify(pagamentoDao).salvar(captor.capture());
